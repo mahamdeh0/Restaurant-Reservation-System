@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using RestaurantReservation.Db.Configurations;
+using RestaurantReservation.Db.Extensions;
 using RestaurantReservation.Db.Models.Entities;
 
 namespace RestaurantReservation.Db
@@ -21,6 +22,7 @@ namespace RestaurantReservation.Db
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(CustomerConfiguration).Assembly);
+            modelBuilder.Seed();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
