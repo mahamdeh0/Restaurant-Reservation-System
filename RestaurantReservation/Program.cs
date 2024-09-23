@@ -28,6 +28,7 @@ namespace RestaurantReservation
 
             await customerRepo.DeleteAsync(newCustomer.CustomerId);
             Console.WriteLine("Customer deleted!");
+            Console.WriteLine();
 
             // Employee Repository Test
             var employeeRepo = new EmployeeRepository(context);
@@ -44,6 +45,23 @@ namespace RestaurantReservation
 
             await employeeRepo.DeleteAsync(newEmployee.EmployeeId);
             Console.WriteLine("Employee deleted!");
+            Console.WriteLine();
+
+            // MenuItem Repository Test
+            var menuItemRepo = new MenuItemRepository(context);
+            var newMenuItem = new MenuItem { RestaurantId = 1, Name = "Pasta", Description = "Delicious spaghetti", Price = 12.99M };
+            await menuItemRepo.CreateAsync(newMenuItem);
+            Console.WriteLine("MenuItem created!");
+
+            newMenuItem.Price = 14.99M;
+            await menuItemRepo.UpdateAsync(newMenuItem);
+            Console.WriteLine("MenuItem updated!");
+
+            var retrievedMenuItem = await menuItemRepo.GetByIdAsync(newMenuItem.ItemId);
+            Console.WriteLine($"Retrieved MenuItem: {retrievedMenuItem.Name} - ${retrievedMenuItem.Price}");
+
+            await menuItemRepo.DeleteAsync(newMenuItem.ItemId);
+            Console.WriteLine("MenuItem deleted!");
 
         }
     }
