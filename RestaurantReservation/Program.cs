@@ -1,4 +1,5 @@
-﻿using RestaurantReservation.Db;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using RestaurantReservation.Db;
 using RestaurantReservation.Db.Models.Entities;
 using RestaurantReservation.Db.Models.Enum;
 using RestaurantReservation.Db.Repositories;
@@ -27,8 +28,7 @@ namespace RestaurantReservation
             Console.WriteLine($"Retrieved Customer: {retrievedCustomer.FirstName} {retrievedCustomer.LastName}");
 
             await customerRepo.DeleteAsync(newCustomer.CustomerId);
-            Console.WriteLine("Customer deleted!");
-            Console.WriteLine();
+            Console.WriteLine("Customer deleted! \n");
 
             // Employee Repository Test
             var employeeRepo = new EmployeeRepository(context);
@@ -44,8 +44,7 @@ namespace RestaurantReservation
             Console.WriteLine($"Retrieved Employee: {retrievedEmployee.FirstName} {retrievedEmployee.LastName}");
 
             await employeeRepo.DeleteAsync(newEmployee.EmployeeId);
-            Console.WriteLine("Employee deleted!");
-            Console.WriteLine();
+            Console.WriteLine("Employee deleted! \n");
 
             // MenuItem Repository Test
             var menuItemRepo = new MenuItemRepository(context);
@@ -61,8 +60,7 @@ namespace RestaurantReservation
             Console.WriteLine($"Retrieved MenuItem: {retrievedMenuItem.Name} - ${retrievedMenuItem.Price}");
 
             await menuItemRepo.DeleteAsync(newMenuItem.ItemId);
-            Console.WriteLine("MenuItem deleted!");
-            Console.WriteLine();
+            Console.WriteLine("MenuItem deleted! \n");
 
             // Order Repository Test
             var orderRepo = new OrderRepository(context);
@@ -78,7 +76,41 @@ namespace RestaurantReservation
             Console.WriteLine($"Retrieved Order ID: {retrievedOrder.OrderId} - Total: ${retrievedOrder.TotalAmount}");
 
             await orderRepo.DeleteAsync(newOrder.OrderId);
-            Console.WriteLine("Order deleted!");
+            Console.WriteLine("Order deleted! \n");
+
+            // Reservation Repository Test
+            var reservationRepo = new ReservationRepository(context);
+            var newReservation = new Reservation { CustomerId = 1, RestaurantId = 2, TableId = 1, PartySize = 4, ReservationDate = DateTime.Now };
+            await reservationRepo.CreateAsync(newReservation);
+            Console.WriteLine("Reservation created!");
+
+            newReservation.PartySize = 5;
+            await reservationRepo.UpdateAsync(newReservation);
+            Console.WriteLine("Reservation updated!");
+
+            var retrievedReservation = await reservationRepo.GetByIdAsync(newReservation.ReservationId);
+            Console.WriteLine($"Retrieved Reservation: Party Size: {retrievedReservation.PartySize}");
+
+            await reservationRepo.DeleteAsync(newReservation.ReservationId);
+            Console.WriteLine("Reservation deleted! \n");
+
+            // Table Repository Test
+            var tableRepo = new TableRepository(context);
+            var newTable = new RestaurantReservation.Db.Models.Entities.Table { RestaurantId = 2 ,  Capacity = 10 };
+            await tableRepo.CreateAsync(newTable);
+            Console.WriteLine("Table created!");
+
+            newTable.Capacity = 8;
+            await tableRepo.UpdateAsync(newTable);
+            Console.WriteLine("Table updated!");
+
+            var retrievedTable = await tableRepo.GetByIdAsync(newTable.TableId);
+            Console.WriteLine($"Retrieved Table: Capacity: {retrievedTable.Capacity}");
+
+            await tableRepo.DeleteAsync(newTable.TableId);
+            Console.WriteLine("Table deleted!");
+
+
         }
     }
 }
