@@ -13,7 +13,7 @@ namespace RestaurantReservation.Db.Configurations
             builder.Property(m => m.RestaurantId).HasColumnName("restaurant_id");
             builder.Property(m => m.Description).HasColumnName("description").HasMaxLength(200);
             builder.Property(m => m.Name).HasColumnName("name").HasMaxLength(50);
-            builder.Property(m => m.Price).HasColumnName("price").HasColumnType("decimal(3, 2)");
+            builder.Property(m => m.Price).HasColumnName("price").HasColumnType("decimal(10, 2)");
 
             builder.HasOne(r => r.Restaurant)
               .WithMany(m => m.MenuItems)
