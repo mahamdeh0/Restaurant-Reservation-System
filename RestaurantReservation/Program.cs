@@ -78,6 +78,22 @@ namespace RestaurantReservation
             await orderRepo.DeleteAsync(newOrder.OrderId);
             Console.WriteLine("Order deleted! \n");
 
+            // OrderItem Repository Test
+            var orderItemRepo = new OrderItemRepository(context);
+            var newOrderItem = new OrderItem { ItemId = 1, OrderId = 1, Quantity = 2 }; 
+            await orderItemRepo.CreateAsync(newOrderItem);
+            Console.WriteLine("OrderItem created!");
+
+            newOrderItem.Quantity = 3;
+            await orderItemRepo.UpdateAsync(newOrderItem);
+            Console.WriteLine("OrderItem updated!");
+
+            var retrievedOrderItem = await orderItemRepo.GetByIdAsync(newOrderItem.OrderItemId);
+            Console.WriteLine($"Retrieved OrderItem: Item ID: {retrievedOrderItem.ItemId}, Quantity: {retrievedOrderItem.Quantity}");
+
+            await orderItemRepo.DeleteAsync(newOrderItem.OrderItemId);
+            Console.WriteLine("OrderItem deleted! \n");
+
             // Reservation Repository Test
             var reservationRepo = new ReservationRepository(context);
             var newReservation = new Reservation { CustomerId = 1, RestaurantId = 2, TableId = 1, PartySize = 4, ReservationDate = DateTime.Now };
