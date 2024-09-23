@@ -1,4 +1,5 @@
 ﻿using RestaurantReservation.Db;
+using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
 using RestaurantReservation.Db.Models.Enum;
 using RestaurantReservation.Db.Repositories;
@@ -24,7 +25,9 @@ namespace RestaurantReservation
             await TestReservationRepository();
             await TestRestaurantRepository();
             await TestTableRepository();
+            await TestListManagers();
         }
+      
 
         private async Task TestCustomerRepository()
         {
@@ -167,7 +170,18 @@ namespace RestaurantReservation
             Console.WriteLine($"Retrieved Table: Capacity: {retrievedTable.Capacity}");
 
             await tableRepo.DeleteAsync(newTable.TableId);
-            Console.WriteLine("Table deleted!");
+            Console.WriteLine("Table deleted!\n");
+        }
+        private async Task TestListManagers()
+        {
+            IEmployeeRepository employeeRepo = new EmployeeRepository(_context);
+            var managers = await employeeRepo.ListManagersAsync();
+
+            Console.WriteLine("List of Managers:");
+            foreach (var manager in managers)
+            {
+                Console.WriteLine($"Manager: {manager.FirstName} {manager.LastName}");
+            }
         }
     }
 }
