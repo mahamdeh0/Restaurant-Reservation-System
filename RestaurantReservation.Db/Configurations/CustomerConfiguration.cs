@@ -12,7 +12,7 @@ namespace RestaurantReservation.Db.Configurations
             builder.Property(c => c.FirstName).HasColumnName("first_name").HasMaxLength(50);
             builder.Property(c => c.LastName).HasColumnName("last_name").HasMaxLength(50);
             builder.Property(c => c.Email).HasColumnName("email").HasMaxLength(100);
-            builder.Property(c => c.PhoneNumber).HasColumnName("customer_id").HasMaxLength(13);
+            builder.Property(c => c.PhoneNumber).HasColumnName("phone_number").HasMaxLength(13);
 
         }
     }
