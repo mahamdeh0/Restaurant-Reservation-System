@@ -62,7 +62,23 @@ namespace RestaurantReservation
 
             await menuItemRepo.DeleteAsync(newMenuItem.ItemId);
             Console.WriteLine("MenuItem deleted!");
+            Console.WriteLine();
 
+            // Order Repository Test
+            var orderRepo = new OrderRepository(context);
+            var newOrder = new Order { EmployeeId = 2, ReservationId = 2 ,OrderDate = DateTime.Now, TotalAmount = 50 };
+            await orderRepo.CreateAsync(newOrder);
+            Console.WriteLine("Order created!");
+
+            newOrder.TotalAmount = 75;
+            await orderRepo.UpdateAsync(newOrder);
+            Console.WriteLine("Order updated!");
+
+            var retrievedOrder = await orderRepo.GetByIdAsync(newOrder.OrderId);
+            Console.WriteLine($"Retrieved Order ID: {retrievedOrder.OrderId} - Total: ${retrievedOrder.TotalAmount}");
+
+            await orderRepo.DeleteAsync(newOrder.OrderId);
+            Console.WriteLine("Order deleted!");
         }
     }
 }
