@@ -2,6 +2,7 @@
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
 using RestaurantReservation.Db.Models.Enum;
+using RestaurantReservation.Db.Models.Views;
 
 namespace RestaurantReservation.Db.Repositories
 {
@@ -19,6 +20,11 @@ namespace RestaurantReservation.Db.Repositories
             return await _context.Employees
                 .Where(e => e.Position == EmployeePosition.Manager)
                 .ToListAsync();
+        }
+
+        public async Task<List<EmployeeWithRestaurantDetails>> GetEmployeesWithRestaurantDetailsAsync()
+        {
+            return await _context.EmployeeWithRestaurantDetails.ToListAsync();
         }
     }
 }

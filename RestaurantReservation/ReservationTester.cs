@@ -30,6 +30,8 @@ namespace RestaurantReservation
             await TestListOrderedMenuItems();
             await TestListOrdersAndMenuItemsAsync();
             await TestGetReservationsByCustomerAsync();
+            await TestGetEmployeesWithRestaurantDetailsAsync();
+            await TestGetReservationDetailsAsync();
         }
 
 
@@ -225,7 +227,7 @@ namespace RestaurantReservation
 
         private async Task TestListOrderedMenuItems()
         {
-            var reservationId = 1; 
+            var reservationId = 1;
 
             var menuItems = await new MenuItemRepository(_context).ListOrderedMenuItemsAsync(reservationId);
 
@@ -271,7 +273,7 @@ namespace RestaurantReservation
 
         private async Task TestGetReservationsByCustomerAsync()
         {
-            var customerId = 1; 
+            var customerId = 1;
 
             var reservations = await new ReservationRepository(_context).GetReservationsByCustomerAsync(customerId);
 
@@ -290,6 +292,42 @@ namespace RestaurantReservation
             }
         }
 
+        private async Task TestGetEmployeesWithRestaurantDetailsAsync()
+        {
+            var employeeRepo = new EmployeeRepository(_context);
+            var employees = await employeeRepo.GetEmployeesWithRestaurantDetailsAsync();
 
+            if (employees != null && employees.Count > 0)
+            {
+                Console.WriteLine("\nEmployees retrieved successfully!");
+                foreach (var employee in employees)
+                {
+                    Console.WriteLine($"EmployeeID: {employee.EmployeeId} ,EmployeeName: {employee.EmployeeFirstName} {employee.EmployeeLastName},EmployeePosition: {employee.EmployeePosition}, Restaurant: {employee.RestaurantName}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No employees found.");
+            }
+        }
+
+        private async Task TestGetReservationDetailsAsync()
+        {
+            var reservationRepo = new ReservationRepository(_context);
+            var reservations = await reservationRepo.GetReservationDetailsAsync();
+
+            if (reservations != null && reservations.Count > 0)
+            {
+                Console.WriteLine("\nReservations retrieved successfully!");
+                foreach (var reservation in reservations)
+                {
+                    Console.WriteLine($"Reservation ID: {reservation.ReservationId}, Date: {reservation.ReservationDate}, Party Size: {reservation.PartySize}, Customer: {reservation.CustomerFirstName} {reservation.CustomerLastName}, Restaurant: {reservation.RestaurantName}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No reservations found.");
+            }
+        }
     }
 }
