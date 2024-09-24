@@ -26,8 +26,10 @@ namespace RestaurantReservation
             await TestRestaurantRepository();
             await TestTableRepository();
             await TestListManagers();
+            await TestCalculateAverageOrderAmount();
+
         }
-      
+
 
         private async Task TestCustomerRepository()
         {
@@ -182,7 +184,43 @@ namespace RestaurantReservation
             {
                 Console.WriteLine($"Manager: {manager.FirstName} {manager.LastName}");
             }
+
+        }
+        private async Task TestCalculateAverageOrderAmount()
+        {
+            var OrderRepo = new OrderRepository(_context);
+
+            var orders = new List<Order>
+                {
+                     new Order { EmployeeId = 34,ReservationId = 2, TotalAmount = 50 },
+                     new Order { EmployeeId = 34,ReservationId = 2, TotalAmount = 100 },
+                     new Order { EmployeeId = 34,ReservationId = 2, TotalAmount = 150 },
+                  };
+
+            foreach (var order in orders)
+            {
+                await _context.Orders.AddAsync(order);
+            }
+            await _context.SaveChangesAsync();
+
+            var EmployeeId = 34;
+            var averageAmount = await OrderRepo.CalculateAverageOrderAmountAsync(EmployeeId);
+            Console.WriteLine($"\nAverage Order Amount for Employee 1: {averageAmount}");
+
+            if (averageAmount == 100m)
+            {
+                Console.WriteLine("Test for CalculateAverageOrderAmountAsync passed");
+            }
+            else
+            {
+                Console.WriteLine($"Test for CalculateAverageOrderAmountAsync failed! Expected 100 but got {averageAmount}");
+            }
+
+            _context.Orders.RemoveRange(orders);
+            await _context.SaveChangesAsync();
+
         }
     }
 }
+
 
