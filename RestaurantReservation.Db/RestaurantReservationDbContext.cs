@@ -27,6 +27,12 @@ namespace RestaurantReservation.Db
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(CustomerConfiguration).Assembly);
             modelBuilder.Seed();
 
+            modelBuilder.HasDbFunction(
+
+                typeof(RestaurantReservationDbContext).GetMethod(
+                nameof(CalculateRestaurantRevenue),
+                new[] { typeof(int) })).HasName("fn_CalculateRestaurantRevenue");
+
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -40,5 +46,6 @@ namespace RestaurantReservation.Db
 
         }
 
+        public decimal CalculateRestaurantRevenue(int restaurantId) => throw new Exception();
     }
 }

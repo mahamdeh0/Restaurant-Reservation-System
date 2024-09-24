@@ -32,8 +32,8 @@ namespace RestaurantReservation
             await TestGetReservationsByCustomerAsync();
             await TestGetEmployeesWithRestaurantDetailsAsync();
             await TestGetReservationDetailsAsync();
+            await TestCalculateRestaurantRevenueAsync(); 
         }
-
 
         private async Task TestCustomerRepository()
         {
@@ -178,6 +178,7 @@ namespace RestaurantReservation
             await tableRepo.DeleteAsync(newTable.TableId);
             Console.WriteLine("Table deleted!\n");
         }
+
         private async Task TestListManagers()
         {
             IEmployeeRepository employeeRepo = new EmployeeRepository(_context);
@@ -190,6 +191,7 @@ namespace RestaurantReservation
             }
 
         }
+
         private async Task TestCalculateAverageOrderAmount()
         {
             var OrderRepo = new OrderRepository(_context);
@@ -329,5 +331,17 @@ namespace RestaurantReservation
                 Console.WriteLine("No reservations found.");
             }
         }
+
+        private async Task TestCalculateRestaurantRevenueAsync()
+        {
+            var restaurantRepo = new RestaurantRepository(_context);
+            int restaurantId = 1; 
+            decimal revenue = await restaurantRepo.CalculateRestaurantRevenueAsync(restaurantId);
+
+            Console.WriteLine($"\nRevenue for Restaurant ID {restaurantId}: {revenue}"); 
+
+
+        }
+
     }
 }
