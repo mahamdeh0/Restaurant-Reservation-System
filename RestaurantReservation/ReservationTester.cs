@@ -29,8 +29,7 @@ namespace RestaurantReservation
             await TestCalculateAverageOrderAmount();
             await TestListOrderedMenuItems();
             await TestListOrdersAndMenuItemsAsync();
-
-
+            await TestGetReservationsByCustomerAsync();
         }
 
 
@@ -269,7 +268,28 @@ namespace RestaurantReservation
                 Console.WriteLine($"No orders found for Reservation ID {reservationId}");
             }
         }
+
+        private async Task TestGetReservationsByCustomerAsync()
+        {
+            var customerId = 1; 
+
+            var reservations = await new ReservationRepository(_context).GetReservationsByCustomerAsync(customerId);
+
+            if (reservations != null && reservations.Any())
+            {
+                Console.WriteLine($"\nReservations for Customer ID {customerId}:");
+
+                foreach (var reservation in reservations)
+                {
+                    Console.WriteLine($"* Reservation ID: {reservation.ReservationId} -- Date: {reservation.ReservationDate} -- Table ID: {reservation.TableId}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"No reservations found for Customer ID {customerId}");
+            }
+        }
+
+
     }
 }
-
-
