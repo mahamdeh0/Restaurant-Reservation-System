@@ -28,6 +28,8 @@ namespace RestaurantReservation
             await TestListManagers();
             await TestCalculateAverageOrderAmount();
             await TestListOrderedMenuItems();
+            await TestListOrdersAndMenuItemsAsync();
+
 
         }
 
@@ -242,6 +244,31 @@ namespace RestaurantReservation
             }
         }
 
+        private async Task TestListOrdersAndMenuItemsAsync()
+        {
+            var reservationId = 3;
+
+            var ordersWithItems = await new OrderRepository(_context).ListOrdersAndMenuItemsAsync(reservationId);
+
+            if (ordersWithItems != null && ordersWithItems.Any())
+            {
+                Console.WriteLine($"\nOrders and menu items for Reservation ID {reservationId}:\n");
+
+                foreach (var order in ordersWithItems)
+                {
+                    Console.WriteLine($"Order ID: {order.OrderId}");
+
+                    foreach (var orderItem in order.OrderItems)
+                    {
+                        Console.WriteLine($"* Menu Item: {orderItem.Item.Name} --- Price: {orderItem.Item.Price}$");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine($"No orders found for Reservation ID {reservationId}");
+            }
+        }
     }
 }
 
