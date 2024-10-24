@@ -1,7 +1,9 @@
-﻿using RestaurantReservation.Db;
-using RestaurantReservation.Db.Models.Entities;
-using RestaurantReservation.Db.Models.Enum;
-using RestaurantReservation.Db.Repositories;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using RestaurantReservation.Db;
 
 namespace RestaurantReservation
 {
@@ -9,9 +11,23 @@ namespace RestaurantReservation
     {
         static async Task Main(string[] args)
         {
-            var context = new RestaurantReservationDbContext();
-            var reservationTester = new ReservationTester(context);
-            await reservationTester.RunTests();
+            var host = Host.CreateDefaultBuilder(args)
+                .ConfigureServices((context, services) =>
+                {
+                    services.AddDbContext<RestaurantReservationDbContext>(options =>
+                        options.UseSqlServer(context.Configuration.GetConnectionString("RestaurantReservationDb")));
+                  
+
+                    services.AddTransient<ReservationTester>();
+                })
+                .Build();
+
+            using (var scope = host.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var reservationTester = services.GetRequiredService<ReservationTester>();
+                await reservationTester.RunTests();
+            }
         }
     }
 }
