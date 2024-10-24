@@ -3,7 +3,7 @@ using RestaurantReservation.Db.Models.Views;
 
 namespace RestaurantReservation.Db.Interfaces
 {
-    public interface IReservationRepository
+    public interface IReservationRepository : IRepository<Reservation>
     {
         Task<List<Reservation>> GetReservationsByCustomerAsync(int customerId);
         Task<List<ReservationDetails>> GetReservationDetailsAsync();

@@ -2,7 +2,7 @@
 
 namespace RestaurantReservation.Db.Interfaces
 {
-    public interface IMenuItemRepository
+    public interface IMenuItemRepository : IRepository<MenuItem>
     {
         public Task<List<MenuItem>> ListOrderedMenuItemsAsync(int reservationId);
 
