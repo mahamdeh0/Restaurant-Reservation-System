@@ -10,6 +10,7 @@ namespace RestaurantReservation.API.Profiles
         {
             CreateMap<Customer,CustomerDto>();
             CreateMap<CustomerCreationDto,Customer>();
+            CreateMap<Customer, CustomerUpdateDto>().ReverseMap();
         }
     }
 }
