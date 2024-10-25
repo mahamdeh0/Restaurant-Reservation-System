@@ -85,5 +85,35 @@ namespace RestaurantReservation.API.Controllers
             );
         }
 
+        /// <summary>
+        /// Updates an existing employee by ID.
+        /// </summary>
+        /// <param name="id">The ID of the employee to update.</param>
+        /// <param name="employeeUpdateDto">The employee update data.</param>
+        /// <returns>A 204 No Content response if successful; otherwise, a 404 Not Found response if the employee does not exist.</returns>
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateEmployee(int id, EmployeeUpdateDto employeeUpdateDto)
+        {
+
+            var existingEmployee = await _employeeRepository.GetByIdAsync(id);
+
+            if (existingEmployee == null)
+                return NotFound();
+
+            if (!await _restaurantRepository.RestaurantExistsAsync(employeeUpdateDto.RestaurantId))
+            {
+                return NotFound(new { Message = "Restaurant not found." });
+            }
+
+            _mapper.Map(employeeUpdateDto, existingEmployee);
+            await _employeeRepository.UpdateAsync(existingEmployee);
+
+            return NoContent();
+        }
+
+
+
     }
 }
