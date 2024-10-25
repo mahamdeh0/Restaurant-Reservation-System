@@ -11,13 +11,17 @@ namespace RestaurantReservation.API.Controllers
     public class EmployeesController : ControllerBase
     {
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly IRestaurantRepository _restaurantRepository;
         private readonly IMapper _mapper;
 
-        public EmployeesController(IEmployeeRepository employeeRepository, IMapper mapper)
+        public EmployeesController(IEmployeeRepository employeeRepository, IRestaurantRepository restaurantRepository, IMapper mapper)
         {
             _employeeRepository = employeeRepository;
+            _restaurantRepository = restaurantRepository;
             _mapper = mapper;
         }
+
+
 
         /// <summary>
         /// Retrieves all employees.
@@ -55,6 +59,31 @@ namespace RestaurantReservation.API.Controllers
             return Ok(_mapper.Map<EmployeeDto>(employee));
         }
 
+        /// <summary>
+        /// Creates a new employee.
+        /// </summary>
+        /// <param name="employeeCreationDto">The employee creation data.</param>
+        /// <returns>The created employee DTO.</returns>
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<EmployeeDto>> CreateEmployee(EmployeeCreationDto employeeCreationDto)
+        {
+            if (!await _restaurantRepository.RestaurantExistsAsync(employeeCreationDto.RestaurantId))
+            {
+                return NotFound(new { Message = "Restaurant not found." });
+            }
+
+            var employeeToAdd = _mapper.Map<Employee>(employeeCreationDto);
+            var addedEmployee = await _employeeRepository.CreateAsync(employeeToAdd);
+            var createdEmployeeReturn = _mapper.Map<EmployeeDto>(addedEmployee);
+
+            return CreatedAtRoute(
+                "GetEmployee",
+                new { id = addedEmployee.EmployeeId },
+                createdEmployeeReturn
+            );
+        }
 
     }
 }
