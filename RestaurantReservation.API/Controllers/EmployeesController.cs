@@ -38,5 +38,23 @@ namespace RestaurantReservation.API.Controllers
             return Ok(_mapper.Map<IEnumerable<EmployeeDto>>(allEmployees));
         }
 
+        /// <summary>
+        /// Retrieves an employee by their ID.
+        /// </summary>
+        /// <param name="id">The ID of the employee to retrieve.</param>
+        /// <returns>The employee DTO if found; otherwise, a 404 Not Found response.</returns>
+        [HttpGet("{id}", Name = "GetEmployee")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<EmployeeDto>> GetEmployee(int id)
+        {
+            var employee = await _employeeRepository.GetByIdAsync(id);
+            if (employee == null)
+                return NotFound();
+
+            return Ok(_mapper.Map<EmployeeDto>(employee));
+        }
+
+
     }
 }
