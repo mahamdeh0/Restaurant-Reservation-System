@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Employees;
 using RestaurantReservation.Db.Interfaces;
@@ -113,6 +114,46 @@ namespace RestaurantReservation.API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Partially updates an existing employee by ID.
+        /// </summary>
+        /// <param name="id">The ID of the employee to update.</param>
+        /// <param name="patchDocument">The patch document containing the updates.</param>
+        /// <returns>A 204 No Content response if successful; a 404 Not Found if the employee or restaurant does not exist; or a 400 Bad Request if the patch document is invalid.</returns>
+        [HttpPatch("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> PartiallyUpdateEmployee(int id, JsonPatchDocument<EmployeeUpdateDto> patchDocument)
+        {
+            var existingEmployee = await _employeeRepository.GetByIdAsync(id);
+
+            if (existingEmployee is null)
+            {
+                return NotFound();
+            }
+
+            var employeeToPatch = _mapper.Map<EmployeeUpdateDto>(existingEmployee);
+
+            patchDocument.ApplyTo(employeeToPatch, ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!TryValidateModel(employeeToPatch))
+                return BadRequest(ModelState);
+
+            if (!await _restaurantRepository.RestaurantExistsAsync(employeeToPatch.RestaurantId))
+            {
+                return NotFound(new { Message = "Restaurant not found." });
+            }
+
+            _mapper.Map(employeeToPatch, existingEmployee);
+
+            await _employeeRepository.UpdateAsync(existingEmployee);
+
+            return NoContent();
+        }
 
 
     }
