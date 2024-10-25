@@ -18,7 +18,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>()
+    .AddScoped<IEmployeeRepository, EmployeeRepository>();
 
 
 
