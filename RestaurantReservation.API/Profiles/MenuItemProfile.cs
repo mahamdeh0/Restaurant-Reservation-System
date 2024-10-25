@@ -9,7 +9,7 @@ namespace RestaurantReservation.API.Profiles
         public MenuItemProfile()
         {
             CreateMap<MenuItem, MenuItemDto>();
-
+            CreateMap<MenuItemCreationDto, MenuItem>();
         }
     }
 }
