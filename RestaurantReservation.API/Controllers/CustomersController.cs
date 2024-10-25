@@ -130,5 +130,24 @@ namespace RestaurantReservation.API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Deletes a customer by ID.
+        /// </summary>
+        /// <param name="id">The ID of the customer to delete.</param>
+        /// <returns>No content if successful; otherwise, a 404 Not Found response.</returns>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteCustomer(int id)
+        {
+            var existingCustomer = await _customerRepository.GetByIdAsync(id);
+            if (existingCustomer == null)
+                return NotFound();
+
+            await _customerRepository.DeleteAsync(id);
+            return NoContent();
+        }
+
+
     }
 }
