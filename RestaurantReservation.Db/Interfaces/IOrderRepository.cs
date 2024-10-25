@@ -6,6 +6,7 @@ namespace RestaurantReservation.Db.Interfaces
     {
         public Task<decimal> CalculateAverageOrderAmountAsync(int employeeId);
         public Task<List<Order>> ListOrdersAndMenuItemsAsync(int reservationId);
+        public Task<bool> OrderItemExistsAsync(int orderId);
 
 
     }
