@@ -73,6 +73,29 @@ namespace RestaurantReservation.API.Controllers
             return CreatedAtRoute("GetCustomer", new { id = addedCustomer.CustomerId }, createdCustomerReturn);
         }
 
+        /// <summary>
+        /// Updates an existing customer by ID.
+        /// </summary>
+        /// <param name="id">The ID of the customer to update.</param>
+        /// <param name="customerUpdateDto">The updated customer data.</param>
+        /// <returns>No content if successful; otherwise, a 404 Not Found response.</returns>
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateCustomer(int id, CustomerUpdateDto customerUpdateDto)
+        {
+
+            var existingCustomer = await _customerRepository.GetByIdAsync(id);
+
+            if (existingCustomer == null)
+                return NotFound();
+
+            _mapper.Map(customerUpdateDto, existingCustomer);
+            await _customerRepository.UpdateAsync(existingCustomer);
+
+            return NoContent();
+        }
 
 
 
