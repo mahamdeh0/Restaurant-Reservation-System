@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Employees;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
+using RestaurantReservation.Db.Repositories;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -153,6 +154,24 @@ namespace RestaurantReservation.API.Controllers
             await _employeeRepository.UpdateAsync(existingEmployee);
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Deletes a customer by ID.
+        /// </summary>
+        /// <param name="id">The ID of the customer to delete.</param>
+        /// <returns>A 204 No Content response if successful; otherwise, a 404 Not Found response if the customer does not exist.</returns>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteCustomer(int id)
+        {
+            var customer = await _employeeRepository.GetByIdAsync(id);
+            if (customer == null)
+                return NotFound();
+
+            await _employeeRepository.DeleteAsync(id);
+            return NoContent(); 
         }
 
 
