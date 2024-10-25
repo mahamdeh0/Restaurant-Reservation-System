@@ -19,8 +19,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>()
-    .AddScoped<IEmployeeRepository, EmployeeRepository>();
-
+    .AddScoped<IEmployeeRepository, EmployeeRepository>()
+    .AddScoped<IRestaurantRepository, RestaurantRepository>();
 
 
 var app = builder.Build();
