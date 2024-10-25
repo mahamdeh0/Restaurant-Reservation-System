@@ -21,7 +21,9 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>()
     .AddScoped<IEmployeeRepository, EmployeeRepository>()
     .AddScoped<IRestaurantRepository, RestaurantRepository>()
-    .AddScoped<IMenuItemRepository, MenuItemRepository>();
+    .AddScoped<IMenuItemRepository, MenuItemRepository>()
+    .AddScoped<IOrderItemRepository, OrderItemRepository>()
+    .AddScoped<IOrderRepository, OrderRepository>();
 
 
 var app = builder.Build();
