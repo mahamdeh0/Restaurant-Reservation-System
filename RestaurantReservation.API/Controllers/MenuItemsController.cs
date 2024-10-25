@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.MenuItems;
 using RestaurantReservation.Db.Interfaces;
@@ -64,6 +65,70 @@ namespace RestaurantReservation.API.Controllers
             return Ok(createdMenuItemDto);
         }
 
+        /// <summary>
+        /// Updates an existing menu item by ID.
+        /// </summary>
+        /// <param name="id">The ID of the menu item to update.</param>
+        /// <param name="menuItemUpdateDto">The menu item update data.</param>
+        /// <returns>A 204 No Content response if successful; otherwise, a 404 Not Found response if the menu item or restaurant does not exist.</returns>
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateMenuItem(int id, MenuItemUpdateDto menuItemUpdateDto)
+        {
+            var existingMenuItem = await _menuItemRepository.GetByIdAsync(id);
+
+            if (existingMenuItem is null)
+                return NotFound();
+
+            if (!await _restaurantRepository.RestaurantExistsAsync(menuItemUpdateDto.RestaurantId))
+            {
+                return NotFound(new { Message = "Restaurant not found." });
+            }
+
+            _mapper.Map(menuItemUpdateDto, existingMenuItem);
+            await _menuItemRepository.UpdateAsync(existingMenuItem);
+
+            return NoContent();
+        }
+
+
+        /// <summary>
+        /// Partially updates an existing menu item by ID using a JSON patch document.
+        /// </summary>
+        /// <param name="id">The ID of the menu item to update.</param>
+        /// <param name="patchDocument">The JSON patch document containing the updates.</param>
+        /// <returns>A 204 No Content response if successful; otherwise, a 404 Not Found response if the menu item or restaurant does not exist, or a 400 Bad Request response if the model state is invalid.</returns>
+        [HttpPatch("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> PartiallyUpdateMenuItem(int id, JsonPatchDocument<MenuItemUpdateDto> patchDocument)
+        {
+            var existingMenuItem = await _menuItemRepository.GetByIdAsync(id);
+
+            if (existingMenuItem is null)
+                return NotFound();
+
+            var menuItemToPatch = _mapper.Map<MenuItemUpdateDto>(existingMenuItem);
+            patchDocument.ApplyTo(menuItemToPatch, ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!TryValidateModel(menuItemToPatch))
+                return BadRequest(ModelState);
+
+            if (!await _restaurantRepository.RestaurantExistsAsync(menuItemToPatch.RestaurantId))
+            {
+                return NotFound(new { Message = "Restaurant not found." });
+            }
+
+            _mapper.Map(menuItemToPatch, existingMenuItem);
+            await _menuItemRepository.UpdateAsync(existingMenuItem);
+
+            return NoContent();
+        }
 
     }
 }
