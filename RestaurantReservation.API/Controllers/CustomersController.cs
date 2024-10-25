@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Customers;
 using RestaurantReservation.Db.Interfaces;
@@ -97,7 +98,37 @@ namespace RestaurantReservation.API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Partially updates an existing customer by ID using a JSON patch document.
+        /// </summary>
+        /// <param name="id">The ID of the customer to update.</param>
+        /// <param name="patchDocument">The JSON patch document containing updates.</param>
+        /// <returns>No content if successful; otherwise, a 404 Not Found response.</returns>
+        [HttpPatch("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult> PartiallyUpdateCustomer(int id, JsonPatchDocument<CustomerUpdateDto> patchDocument)
+        {
+            var existingCustomer = await _customerRepository.GetByIdAsync(id);
 
+            if (existingCustomer == null)
+                return NotFound();
+
+            var customerToPatch = _mapper.Map<CustomerUpdateDto>(existingCustomer);
+            patchDocument.ApplyTo(customerToPatch, ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!TryValidateModel(customerToPatch))
+                return BadRequest(ModelState);
+
+            _mapper.Map(customerToPatch, existingCustomer);
+            await _customerRepository.UpdateAsync(existingCustomer);
+
+            return NoContent();
+        }
 
     }
 }
