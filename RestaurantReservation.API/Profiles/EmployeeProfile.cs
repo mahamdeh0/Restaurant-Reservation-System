@@ -10,6 +10,7 @@ namespace RestaurantReservation.API.Profiles
         public EmployeeProfile()
         {
             CreateMap<Employee, EmployeeDto>().ForMember(dest => dest.PositionName, opt => opt.MapFrom(src => ((EmployeePosition)src.Position).ToString())); ;
+            CreateMap<EmployeeCreationDto, Employee>();
 
         }
     }
