@@ -130,6 +130,29 @@ namespace RestaurantReservation.API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Deletes a specific order item from a specified order.
+        /// </summary>
+        /// <param name="orderId">The ID of the order that contains the order item.</param>
+        /// <param name="id">The ID of the order item to delete.</param>
+        /// <returns>A 204 No Content response if successful; otherwise, a 404 Not Found response if the order or order item does not exist, or if the order item does not belong to the specified order.</returns>
+        [HttpDelete]
+        public async Task<IActionResult> DeleteOrderItem(int orderId, int id)
+        {
+            if (!await _orderRepository.OrderItemExistsAsync(orderId))
+                return NotFound("No order found with the specified ID.");
+
+            var orderItem = await _orderItemRepository.GetByIdAsync(id);
+
+            if (orderItem is null || orderItem.OrderId != orderId)
+            {
+                return NotFound("Order item with the specified ID was not found for the provided order.");
+            }
+
+            await _orderItemRepository.DeleteAsync(id);
+
+            return NoContent();
+        }
 
 
     }
