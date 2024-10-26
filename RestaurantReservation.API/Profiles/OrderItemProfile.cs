@@ -9,6 +9,8 @@ namespace RestaurantReservation.API.Profiles
         public OrderItemProfile()
         {
             CreateMap<OrderItem, OrderItemDto>();
+            CreateMap<OrderItemCreationDto, OrderItem>();
+            CreateMap<OrderItemUpdateDto, OrderItem>().ReverseMap();
 
         }
     }
