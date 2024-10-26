@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Orders;
 using RestaurantReservation.Db.Interfaces;
+using RestaurantReservation.Db.Models.Entities;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -48,6 +49,35 @@ namespace RestaurantReservation.API.Controllers
 
             return Ok(_mapper.Map<OrderDto>(order));
         }
+
+        /// <summary>
+        /// Creates a new order.
+        /// </summary>
+        /// <param name="orderCreationDto">The order creation data.</param>
+        /// <returns>A 201 Created response with the created order DTO if successful; otherwise, a 400 Bad Request response if the creation fails.</returns>
+        [HttpPost]
+        public async Task<ActionResult<OrderDto>> CreateOrder(OrderCreationDto orderCreationDto)
+        {
+            if (orderCreationDto == null)
+                return BadRequest(new { Message = "Order creation data is required." });
+
+
+            var orderToAdd = _mapper.Map<Order>(orderCreationDto);
+
+            var addedOrder = await _orderRepository.CreateAsync(orderToAdd);
+
+            if (addedOrder == null)
+                return BadRequest(new { Message = "Failed to create the order." });
+
+            var orderDto = _mapper.Map<OrderDto>(addedOrder);
+
+            return CreatedAtRoute(
+                "GetOrder",
+                new { id = addedOrder.OrderId },
+                orderDto
+            );
+        }
+
 
     }
 }
