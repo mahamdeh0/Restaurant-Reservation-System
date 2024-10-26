@@ -9,7 +9,7 @@ namespace RestaurantReservation.API.Profiles
         public OrderProfile()
         {
             CreateMap<Order, OrderDto>();
-
+            CreateMap<OrderCreationDto, Order>();
 
         }
     }
