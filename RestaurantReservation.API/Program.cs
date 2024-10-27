@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using RestaurantReservation.API.Services;
+using FluentValidation.AspNetCore;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +16,13 @@ builder.Services.AddDbContext<RestaurantReservationDbContext>(options =>
 
 
 builder.Services.AddControllers()
-    .AddNewtonsoftJson();
+    .AddNewtonsoftJson()
+    .AddFluentValidation(config =>
+    {
+        config.ImplicitlyValidateChildProperties = true;
+        config.ImplicitlyValidateRootCollectionElements = true;
+        config.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+    });
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
