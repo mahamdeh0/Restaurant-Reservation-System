@@ -11,6 +11,7 @@ namespace RestaurantReservation.API.Profiles
             CreateMap<Order, OrderDto>();
             CreateMap<OrderCreationDto, Order>();
             CreateMap<OrderUpdateDto, Order>().ReverseMap();
+            CreateMap<Order, OrderWithMenuItemsDto>().ForMember(destination => destination.MenuItems,options => options.MapFrom(src => src.OrderItems.Select(i => i.Item)));
 
         }
     }

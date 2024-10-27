@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using RestaurantReservation.API.Models.Orders;
 using RestaurantReservation.API.Models.Reservations;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
-using RestaurantReservation.Db.Repositories;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -15,16 +15,17 @@ namespace RestaurantReservation.API.Controllers
         private readonly IReservationRepository _reservationRepository;
         private readonly IRestaurantRepository _restaurantRepository;
         private readonly ICustomerRepository _customerRepository;
+        private readonly IOrderRepository _orderRepository;
         private readonly IMapper _mapper;
 
-        public ReservationsController(IReservationRepository reservationRepository, IRestaurantRepository restaurantRepository, ICustomerRepository customerRepository, IMapper mapper)
+        public ReservationsController(IReservationRepository reservationRepository, IRestaurantRepository restaurantRepository, ICustomerRepository customerRepository, IOrderRepository orderRepository, IMapper mapper)
         {
             _reservationRepository = reservationRepository;
             _restaurantRepository = restaurantRepository;
             _customerRepository = customerRepository;
+            _orderRepository = orderRepository;
             _mapper = mapper;
         }
-
 
 
         /// <summary>
@@ -39,9 +40,9 @@ namespace RestaurantReservation.API.Controllers
             var reservations = await _reservationRepository.GetAllAsync();
 
             if (reservations == null || !reservations.Any())
-                return NoContent(); 
+                return NoContent();
 
-            return Ok(_mapper.Map<IEnumerable<ReservationDto>>(reservations)); 
+            return Ok(_mapper.Map<IEnumerable<ReservationDto>>(reservations));
         }
 
         /// <summary>
@@ -79,6 +80,23 @@ namespace RestaurantReservation.API.Controllers
 
             return Ok(_mapper.Map<IEnumerable<ReservationDto>>(reservations));
         }
+
+        /// <summary>
+        /// Retrieves a list of orders associated with a specific reservation.
+        /// </summary>
+        /// <param name="id">The ID of the reservation for which to retrieve orders.</param>
+        /// <returns>A list of orders with their associated menu items; or a 404 Not Found response if no orders are found for the specified reservation.</returns>
+        [HttpGet("{id}/orders")]
+        public async Task<ActionResult<IEnumerable<OrderWithMenuItemsDto>>> GetOrdersReservation(int id)
+        {
+            var orders = await _orderRepository.ListOrdersAndMenuItemsAsync(id);
+
+            if (orders == null || !orders.Any())
+                return NotFound(new { Message = "No orders found for the specified reservation." });
+
+            return Ok(_mapper.Map<IEnumerable<OrderWithMenuItemsDto>>(orders));
+        }
+
 
         /// <summary>
         /// Creates a new reservation.
