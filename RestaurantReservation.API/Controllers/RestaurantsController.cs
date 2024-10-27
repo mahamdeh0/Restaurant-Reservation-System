@@ -138,5 +138,23 @@ namespace RestaurantReservation.API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Deletes a restaurant by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the restaurant to delete.</param>
+        /// <returns>A 204 No Content response if the restaurant was successfully deleted; otherwise, a 404 Not Found response if the restaurant does not exist.</returns>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteRestaurant(int id)
+        {
+            var restaurantExists = await _restaurantRepository.GetByIdAsync(id);
+
+            if (restaurantExists == null)
+                return NotFound(new { Message = "Restaurant not found." });
+
+            await _restaurantRepository.DeleteAsync(id);
+
+            return NoContent();
+        }
+
     }
 }
