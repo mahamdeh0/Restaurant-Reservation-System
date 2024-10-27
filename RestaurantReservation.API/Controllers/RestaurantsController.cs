@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Reservations;
 using RestaurantReservation.API.Models.Restaurants;
@@ -80,6 +81,61 @@ namespace RestaurantReservation.API.Controllers
                 new { id = addedRestaurant.RestaurantId },
                 restaurantDto
             );
+        }
+
+        /// <summary>
+        /// Updates an existing restaurant.
+        /// </summary>
+        /// <param name="id">The ID of the restaurant to update.</param>
+        /// <param name="restaurantUpdateDto">The updated restaurant data.</param>
+        /// <returns>A 204 No Content response if successful; otherwise, a 404 Not Found response if the restaurant does not exist.</returns>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateRestaurant(int id, RestaurantUpdateDto restaurantUpdateDto)
+        {
+            if (restaurantUpdateDto == null) 
+                return BadRequest(new { Message = "Restaurant update data is required." });
+
+            var restaurant = await _restaurantRepository.GetByIdAsync(id);
+
+            if (restaurant == null)
+                return NotFound();
+
+            _mapper.Map(restaurantUpdateDto, restaurant);
+
+            await _restaurantRepository.UpdateAsync(restaurant);
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Partially updates an existing restaurant.
+        /// </summary>
+        /// <param name="id">The ID of the restaurant to update.</param>
+        /// <param name="patchDocument">The patch document containing the changes.</param>
+        /// <returns>A 204 No Content response if successful; otherwise, a 404 Not Found response if the restaurant does not exist, or a 400 Bad Request response if the patch document is invalid.</returns>
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PartiallyUpdateRestaurant(int id, JsonPatchDocument<RestaurantUpdateDto> patchDocument)
+        {
+            if (patchDocument == null) 
+                return BadRequest(new { Message = "Patch document is required." });
+
+            var restaurant = await _restaurantRepository.GetByIdAsync(id);
+
+            if (restaurant == null)
+                return NotFound();
+
+            var restaurantToPatch = _mapper.Map<RestaurantUpdateDto>(restaurant);
+
+            patchDocument.ApplyTo(restaurantToPatch, ModelState);
+
+            if (!ModelState.IsValid || !TryValidateModel(restaurantToPatch))
+                return BadRequest(ModelState);
+
+            _mapper.Map(restaurantToPatch, restaurant);
+
+            await _restaurantRepository.UpdateAsync(restaurant);
+
+            return NoContent();
         }
 
     }
