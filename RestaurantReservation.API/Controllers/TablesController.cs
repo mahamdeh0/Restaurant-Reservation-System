@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Tables;
 using RestaurantReservation.Db.Interfaces;
@@ -77,6 +78,59 @@ namespace RestaurantReservation.API.Controllers
                 tableDto
             );
         }
+
+        /// <summary>
+        /// Updates an existing table.
+        /// </summary>
+        /// <param name="id">The ID of the table to update.</param>
+        /// <param name="tableUpdateDto">The updated table data.</param>
+        /// <returns>A 204 No Content response if successful; otherwise, a 404 Not Found response if the table or restaurant does not exist.</returns>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateTable(int id, TableUpdateDto tableUpdateDto)
+        {
+            var table = await _tableRepository.GetByIdAsync(id);
+
+            if (table == null)
+                return NotFound();
+
+            if (!await _restaurantRepository.RestaurantExistsAsync(tableUpdateDto.RestaurantId))
+                return NotFound(new { Message = "Restaurant not found." });
+
+            _mapper.Map(tableUpdateDto, table);
+            await _tableRepository.UpdateAsync(table);
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Partially updates an existing table.
+        /// </summary>
+        /// <param name="id">The ID of the table to update.</param>
+        /// <param name="patchDocument">The JSON patch document containing the updates.</param>
+        /// <returns>A 204 No Content response if successful; otherwise, a 404 Not Found response if the table or restaurant does not exist.</returns>
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PartiallyUpdateTable(int id, JsonPatchDocument<TableUpdateDto> patchDocument)
+        {
+            var table = await _tableRepository.GetByIdAsync(id);
+
+            if (table == null)
+                return NotFound();
+
+            var tableToPatch = _mapper.Map<TableUpdateDto>(table);
+            patchDocument.ApplyTo(tableToPatch, ModelState);
+
+            if (!ModelState.IsValid || !TryValidateModel(tableToPatch))
+                return BadRequest(ModelState);
+
+            if (!await _restaurantRepository.RestaurantExistsAsync(tableToPatch.RestaurantId))
+                return NotFound(new { Message = "Restaurant not found." });
+
+            _mapper.Map(tableToPatch, table);
+            await _tableRepository.UpdateAsync(table);
+
+            return NoContent();
+        }
+
 
     }
 }
