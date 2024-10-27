@@ -35,5 +35,24 @@ namespace RestaurantReservation.API.Controllers
             return Ok(_mapper.Map<IEnumerable<ReservationDto>>(reservations)); 
         }
 
+        /// <summary>
+        /// Retrieves a reservation by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the reservation to retrieve.</param>
+        /// <returns>An ActionResult containing the reservation DTO if found; otherwise, returns a 404 Not Found response.</returns>
+        [HttpGet("{id}", Name = "GetReservation")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ReservationDto>> GetReservation(int id)
+        {
+            var reservation = await _reservationRepository.GetByIdAsync(id);
+
+            if (reservation == null)
+                return NotFound(new { Message = $"Reservation with ID {id} not found." });
+
+            return Ok(_mapper.Map<ReservationDto>(reservation));
+        }
+
+
     }
 }
