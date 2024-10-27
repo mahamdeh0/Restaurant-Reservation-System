@@ -14,14 +14,18 @@ namespace RestaurantReservation.API.Controllers
     {
         private readonly IReservationRepository _reservationRepository;
         private readonly IRestaurantRepository _restaurantRepository;
+        private readonly ICustomerRepository _customerRepository;
         private readonly IMapper _mapper;
 
-        public ReservationsController(IReservationRepository reservationRepository, IRestaurantRepository restaurantRepository, IMapper mapper)
+        public ReservationsController(IReservationRepository reservationRepository, IRestaurantRepository restaurantRepository, ICustomerRepository customerRepository, IMapper mapper)
         {
             _reservationRepository = reservationRepository;
             _restaurantRepository = restaurantRepository;
+            _customerRepository = customerRepository;
             _mapper = mapper;
         }
+
+
 
         /// <summary>
         /// Retrieves a list of all reservations.
@@ -58,6 +62,23 @@ namespace RestaurantReservation.API.Controllers
             return Ok(_mapper.Map<ReservationDto>(reservation));
         }
 
+        /// <summary>
+        /// Retrieves a list of reservations for a specific customer.
+        /// </summary>
+        /// <param name="customerId">The ID of the customer whose reservations are to be retrieved.</param>
+        /// <returns>A list of reservation DTOs for the specified customer; or a 404 Not Found response if the customer does not exist.</returns>
+        [HttpGet("customer/{customerId}")]
+        public async Task<ActionResult<IEnumerable<ReservationDto>>> GetReservationsForCustomer(int customerId)
+        {
+            if (!await _customerRepository.CustomerExistsAsync(customerId))
+            {
+                return NotFound(new { Message = "Customer not found." });
+            }
+
+            var reservations = await _reservationRepository.GetReservationsByCustomerAsync(customerId);
+
+            return Ok(_mapper.Map<IEnumerable<ReservationDto>>(reservations));
+        }
 
         /// <summary>
         /// Creates a new reservation.
