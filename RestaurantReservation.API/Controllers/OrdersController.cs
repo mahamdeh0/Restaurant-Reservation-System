@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Orders;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
+using RestaurantReservation.Db.Repositories;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -135,6 +136,24 @@ namespace RestaurantReservation.API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Deletes an order by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the order to delete.</param>
+        /// <returns>A 204 No Content response if successful; otherwise, a 404 Not Found response if the order does not exist.</returns>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteOrder(int id)
+        {
+            var order = await _orderRepository.GetByIdAsync(id);
+            if (order is null)
+                return NotFound(new { Message = $"Order with ID {id} not found." });
+
+            await _orderRepository.DeleteAsync(id);
+
+            return NoContent();
+        }
 
     }
 }
