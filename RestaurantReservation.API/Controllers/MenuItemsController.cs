@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.MenuItems;
@@ -9,6 +10,7 @@ namespace RestaurantReservation.API.Controllers
 {
     [Route("api/menu-items")]
     [ApiController]
+    [Authorize]
     public class MenuItemsController : ControllerBase
     {
         private readonly IMenuItemRepository _menuItemRepository;
