@@ -3,10 +3,11 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.OrderItems;
 using RestaurantReservation.Db.Interfaces;
+using RestaurantReservation.Db.Models.Entities;
 
 namespace RestaurantReservation.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/orders/{orderId}/order-items")]
     [ApiController]
     public class OrderItemsController : ControllerBase
     {
@@ -62,6 +63,32 @@ namespace RestaurantReservation.API.Controllers
                 return NotFound("The order item does not belong to the specified order. Please verify the order ID.");
 
             return Ok(_mapper.Map<OrderItemDto>(orderItem));
+        }
+
+        /// <summary>
+        /// Creates a new order item for a specified order.
+        /// </summary>
+        /// <param name="orderId">The ID of the order to add the item to.</param>
+        /// <param name="orderItemCreationDto">The data for the new order item.</param>
+        /// <returns>A 201 Created response with the created order item DTO, or a 404 Not Found if the order does not exist.</returns>
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<OrderItemDto>> CreateOrderItem(int orderId, OrderItemCreationDto orderItemCreationDto)
+        {
+            if (!await _orderRepository.OrderItemExistsAsync(orderId))
+            {
+                return NotFound("No order found with the specified ID.");
+            }
+
+            var orderItem = _mapper.Map<OrderItem>(orderItemCreationDto);
+            orderItem.OrderId = orderId; 
+
+            await _orderItemRepository.CreateAsync(orderItem);
+
+            var orderItemDto = _mapper.Map<OrderItemDto>(orderItem);
+
+            return CreatedAtRoute("GetOrderItem", new { orderId = orderId, id = orderItemDto.ItemId }, orderItemDto);
         }
 
         /// <summary>
