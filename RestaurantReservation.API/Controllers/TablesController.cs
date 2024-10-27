@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Tables;
 using RestaurantReservation.Db.Interfaces;
+using RestaurantReservation.Db.Models.Entities;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -51,6 +52,30 @@ namespace RestaurantReservation.API.Controllers
                 return NotFound();
 
             return Ok(_mapper.Map<TableDto>(table));
+        }
+
+        /// <summary>
+        /// Creates a new table.
+        /// </summary>
+        /// <param name="tableCreationDto">The table creation data.</param>
+        /// <returns>A 201 Created response with the created table DTO if successful; otherwise, a 404 Not Found response if the restaurant does not exist.</returns>
+        [HttpPost]
+        public async Task<ActionResult<TableDto>> CreateTable(TableCreationDto tableCreationDto)
+        {
+            if (!await _restaurantRepository.RestaurantExistsAsync(tableCreationDto.RestaurantId))
+                return NotFound(new { Message = "Restaurant not found." });
+
+            var tableToAdd = _mapper.Map<Table>(tableCreationDto);
+
+            var addedTable = await _tableRepository.CreateAsync(tableToAdd);
+
+            var tableDto = _mapper.Map<TableDto>(addedTable);
+
+            return CreatedAtRoute(
+                "GetTable",
+                new { id = addedTable.TableId },
+                tableDto
+            );
         }
 
     }
