@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using RestaurantReservation.API.Models.Reservations;
 using RestaurantReservation.API.Models.Restaurants;
 using RestaurantReservation.Db.Interfaces;
+using RestaurantReservation.Db.Models.Entities;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -51,6 +53,33 @@ namespace RestaurantReservation.API.Controllers
 
 
             return Ok(_mapper.Map<RestaurantDto>(restaurant));
+        }
+
+        /// <summary>
+        /// Creates a new restaurant.
+        /// </summary>
+        /// <param name="restaurantCreationDto">The restaurant creation data.</param>
+        /// <returns>A 201 Created response with the created restaurant DTO if successful; otherwise, a 400 Bad Request response if the creation fails.</returns>
+        [HttpPost]
+        public async Task<ActionResult<RestaurantDto>> CreateRestaurant(RestaurantCreationDto restaurantCreationDto)
+        {
+            if (restaurantCreationDto == null) 
+                return BadRequest(new { Message = "Restaurant creation data is required." });
+
+            var restaurantToAdd = _mapper.Map<Restaurant>(restaurantCreationDto);
+
+            var addedRestaurant = await _restaurantRepository.CreateAsync(restaurantToAdd);
+
+            if (addedRestaurant == null) 
+                return BadRequest(new { Message = "Failed to create the restaurant." });
+
+            var restaurantDto = _mapper.Map<RestaurantDto>(addedRestaurant);
+
+            return CreatedAtRoute(
+                "GetRestaurant",
+                new { id = addedRestaurant.RestaurantId },
+                restaurantDto
+            );
         }
 
     }
