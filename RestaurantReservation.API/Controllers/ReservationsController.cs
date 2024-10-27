@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Reservations;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
+using RestaurantReservation.Db.Repositories;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -11,11 +13,13 @@ namespace RestaurantReservation.API.Controllers
     public class ReservationsController : ControllerBase
     {
         private readonly IReservationRepository _reservationRepository;
+        private readonly IRestaurantRepository _restaurantRepository;
         private readonly IMapper _mapper;
 
-        public ReservationsController(IReservationRepository reservationRepository, IMapper mapper)
+        public ReservationsController(IReservationRepository reservationRepository, IRestaurantRepository restaurantRepository, IMapper mapper)
         {
             _reservationRepository = reservationRepository;
+            _restaurantRepository = restaurantRepository;
             _mapper = mapper;
         }
 
@@ -84,6 +88,59 @@ namespace RestaurantReservation.API.Controllers
             );
         }
 
+        /// <summary>
+        /// Fully updates an existing reservation by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the reservation to update.</param>
+        /// <param name="reservationUpdateDto">The DTO containing updated reservation details.</param>
+        /// <returns>A 204 No Content response if successful; otherwise, a 404 Not Found response if the reservation does not exist.</returns>
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateReservation(int id, ReservationUpdateDto reservationUpdateDto)
+        {
+            var reservation = await _reservationRepository.GetByIdAsync(id);
+
+            if (reservation is null)
+                return NotFound(new { Message = "Reservation not found." });
+
+            _mapper.Map(reservationUpdateDto, reservation);
+
+            await _reservationRepository.UpdateAsync(reservation);
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Partially updates an existing reservation by its ID using a JSON patch document.
+        /// </summary>
+        /// <param name="id">The ID of the reservation to partially update.</param>
+        /// <param name="patchDocument">The JSON patch document containing the updates.</param>
+        /// <returns>A 204 No Content response if successful; otherwise, a 404 Not Found if the reservation does not exist, or a 400 Bad Request if the patch document is invalid.</returns>
+        [HttpPatch("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> PartiallyUpdateReservation(int id, JsonPatchDocument<ReservationUpdateDto> patchDocument)
+        {
+            var reservation = await _reservationRepository.GetByIdAsync(id);
+
+            if (reservation is null)
+                return NotFound(new { Message = "Reservation not found." });
+
+            var reservationToPatch = _mapper.Map<ReservationUpdateDto>(reservation);
+
+            patchDocument.ApplyTo(reservationToPatch, ModelState);
+
+            if (!ModelState.IsValid || !TryValidateModel(reservationToPatch))
+                return BadRequest(ModelState);
+
+            _mapper.Map(reservationToPatch, reservation);
+
+            await _reservationRepository.UpdateAsync(reservation);
+
+            return NoContent();
+        }
 
     }
 }
