@@ -62,6 +62,19 @@ namespace RestaurantReservation.API.Controllers
         }
 
         /// <summary>
+        /// Retrieves a list of managers.
+        /// </summary>
+        /// <returns>A list of employee DTOs representing managers.</returns>
+        [HttpGet("managers")]
+        public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetManagers()
+        {
+            var employees = await _employeeRepository.ListManagersAsync();
+
+            return Ok(_mapper.Map<IEnumerable<EmployeeDto>>(employees));
+        }
+
+
+        /// <summary>
         /// Creates a new employee.
         /// </summary>
         /// <param name="employeeCreationDto">The employee creation data.</param>
