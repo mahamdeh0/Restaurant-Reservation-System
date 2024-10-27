@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Employees;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
-using RestaurantReservation.Db.Repositories;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -14,16 +13,16 @@ namespace RestaurantReservation.API.Controllers
     {
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IRestaurantRepository _restaurantRepository;
+        private readonly IOrderRepository _orderRepository;
         private readonly IMapper _mapper;
 
-        public EmployeesController(IEmployeeRepository employeeRepository, IRestaurantRepository restaurantRepository, IMapper mapper)
+        public EmployeesController(IEmployeeRepository employeeRepository, IRestaurantRepository restaurantRepository, IOrderRepository orderRepository, IMapper mapper)
         {
             _employeeRepository = employeeRepository;
             _restaurantRepository = restaurantRepository;
+            _orderRepository = orderRepository;
             _mapper = mapper;
         }
-
-
 
         /// <summary>
         /// Retrieves all employees.
@@ -73,6 +72,27 @@ namespace RestaurantReservation.API.Controllers
             return Ok(_mapper.Map<IEnumerable<EmployeeDto>>(employees));
         }
 
+        /// <summary>
+        /// Calculates the average order amount handled by a specific employee.
+        /// </summary>
+        /// <param name="employeeId">The ID of the employee for whom to calculate the average order amount.</param>
+        /// <returns>A 200 OK response with the average order amount; or a 404 Not Found response if no orders exist for the specified employee.</returns>
+        [HttpGet("{employeeId}/average-order-amount")]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAverageOrderAmount(int employeeId)
+        {
+            try
+            {
+                var averageOrderAmount = await _orderRepository.CalculateAverageOrderAmountAsync(employeeId);
+
+                return Ok(new { averageOrderAmount });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while processing your request.", Details = ex.Message });
+            }
+        }
 
         /// <summary>
         /// Creates a new employee.
@@ -184,7 +204,7 @@ namespace RestaurantReservation.API.Controllers
                 return NotFound();
 
             await _employeeRepository.DeleteAsync(id);
-            return NoContent(); 
+            return NoContent();
         }
 
 
