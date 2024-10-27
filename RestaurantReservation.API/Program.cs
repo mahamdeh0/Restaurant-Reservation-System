@@ -24,7 +24,8 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>()
     .AddScoped<IMenuItemRepository, MenuItemRepository>()
     .AddScoped<IOrderItemRepository, OrderItemRepository>()
     .AddScoped<IOrderRepository, OrderRepository>()
-    .AddScoped<IReservationRepository, ReservationRepository>();
+    .AddScoped<IReservationRepository, ReservationRepository>()
+    .AddScoped<ITableRepository, TableRepository>();
 
 
 var app = builder.Build();
