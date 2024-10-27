@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Reservations;
 using RestaurantReservation.Db.Interfaces;
+using RestaurantReservation.Db.Models.Entities;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -51,6 +52,36 @@ namespace RestaurantReservation.API.Controllers
                 return NotFound(new { Message = $"Reservation with ID {id} not found." });
 
             return Ok(_mapper.Map<ReservationDto>(reservation));
+        }
+
+
+        /// <summary>
+        /// Creates a new reservation.
+        /// </summary>
+        /// <param name="reservationCreationDto">The DTO containing the reservation details.</param>
+        /// <returns>A 201 Created response with the created reservation DTO if successful; otherwise, a 400 Bad Request response if the creation fails.</returns>
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ReservationDto>> CreateReservation(ReservationCreationDto reservationCreationDto)
+        {
+            if (reservationCreationDto == null)
+                return BadRequest(new { Message = "Reservation creation data is required." });
+
+            var reservationToAdd = _mapper.Map<Reservation>(reservationCreationDto);
+
+            var addedReservation = await _reservationRepository.CreateAsync(reservationToAdd);
+
+            if (addedReservation == null)
+                return BadRequest(new { Message = "Failed to create the reservation." });
+
+            var reservationDto = _mapper.Map<ReservationDto>(addedReservation);
+
+            return CreatedAtRoute(
+                "GetReservation",
+                new { id = addedReservation.ReservationId },
+                reservationDto
+            );
         }
 
 
