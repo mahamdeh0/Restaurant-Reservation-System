@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using RestaurantReservation.API.Models.MenuItems;
 using RestaurantReservation.API.Models.Orders;
 using RestaurantReservation.API.Models.Reservations;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
+using RestaurantReservation.Db.Repositories;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -12,21 +14,23 @@ namespace RestaurantReservation.API.Controllers
     [ApiController]
     public class ReservationsController : ControllerBase
     {
+
         private readonly IReservationRepository _reservationRepository;
         private readonly IRestaurantRepository _restaurantRepository;
         private readonly ICustomerRepository _customerRepository;
+        private readonly IMenuItemRepository _menuItemRepository;
         private readonly IOrderRepository _orderRepository;
         private readonly IMapper _mapper;
 
-        public ReservationsController(IReservationRepository reservationRepository, IRestaurantRepository restaurantRepository, ICustomerRepository customerRepository, IOrderRepository orderRepository, IMapper mapper)
+        public ReservationsController(IReservationRepository reservationRepository, IRestaurantRepository restaurantRepository, ICustomerRepository customerRepository, IMenuItemRepository menuItemRepository, IOrderRepository orderRepository, IMapper mapper)
         {
             _reservationRepository = reservationRepository;
             _restaurantRepository = restaurantRepository;
             _customerRepository = customerRepository;
+            _menuItemRepository = menuItemRepository;
             _orderRepository = orderRepository;
             _mapper = mapper;
         }
-
 
         /// <summary>
         /// Retrieves a list of all reservations.
@@ -95,6 +99,22 @@ namespace RestaurantReservation.API.Controllers
                 return NotFound(new { Message = "No orders found for the specified reservation." });
 
             return Ok(_mapper.Map<IEnumerable<OrderWithMenuItemsDto>>(orders));
+        }
+
+        /// <summary>
+        /// Retrieves a list of menu items that were ordered for a specific order.
+        /// </summary>
+        /// <param name="id">The ID of the order for which to retrieve ordered menu items.</param>
+        /// <returns>A list of ordered menu items; or a 404 Not Found response if no menu items are found for the specified order.</returns>
+        [HttpGet("{id}/menu-items")]
+        public async Task<ActionResult<IEnumerable<MenuItemDto>>> GetOrderedMenuItemsForReservation(int id)
+        {
+            var menuItems = await _menuItemRepository.ListOrderedMenuItemsAsync(id);
+
+            if (menuItems == null || !menuItems.Any())
+                return NotFound(new { Message = "No menu items found for the specified order." });
+
+            return Ok(_mapper.Map<IEnumerable<MenuItemDto>>(menuItems));
         }
 
 
