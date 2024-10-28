@@ -12,22 +12,11 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="8.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.10" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.1.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RestaurantReservation.Db\RestaurantReservation.Db.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Validators\Employees\" />
-    <Folder Include="Validators\MenuItems\" />
-    <Folder Include="Validators\Tables\" />
-    <Folder Include="Validators\Restaurants\" />
-    <Folder Include="Validators\Reservations\" />
-    <Folder Include="Validators\Orders\" />
-    <Folder Include="Validators\OrderItems\" />
   </ItemGroup>
 
 </Project>

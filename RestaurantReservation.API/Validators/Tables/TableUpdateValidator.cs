@@ -8,7 +8,7 @@ namespace RestaurantReservation.API.Validators.Tables
         public TableUpdateValidator()
         {
             RuleFor(x => x.RestaurantId)
-                .NotEmpty().WithMessage("Restaurant ID is required.")
+                .NotEmpty().WithMessage("Restaurant ID is required.");
 
             RuleFor(x => x.Capacity)
                 .NotEmpty().WithMessage("Capacity is required.")

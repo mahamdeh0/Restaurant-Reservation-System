@@ -1,11 +1,12 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using RestaurantReservation.API.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
 namespace RestaurantReservation.API.Services
 {
-    public class JwtTokenGenerator
+    public class JwtTokenGenerator : IJwtTokenGenerator
     {
 
         private readonly IConfiguration _configuration;
@@ -37,21 +38,5 @@ namespace RestaurantReservation.API.Services
 
         }
 
-        public bool ValidateToken(string token)
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
-
-            var validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-
-            };
-
-            var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
-
-            return validatedToken != null;
-        }
     }
 }
