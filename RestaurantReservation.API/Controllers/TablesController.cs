@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Tables;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
+using System.Text.Json;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -20,6 +21,9 @@ namespace RestaurantReservation.API.Controllers
 
         private readonly IMapper _mapper;
 
+        private const int MaxPageSize = 5;
+
+
         public TablesController(ITableRepository tableRepository, IRestaurantRepository restaurantRepository, IMapper mapper)
         {
             _tableRepository = tableRepository;
@@ -28,19 +32,36 @@ namespace RestaurantReservation.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves a list of all tables.
+        /// Retrieves a list of all tables with pagination.
         /// </summary>
+        /// <param name="pageNumber">The number of the page to retrieve.</param>
+        /// <param name="pageSize">The number of items per page.</param>
         /// <returns>A list of table DTOs.</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TableDto>>> GetTables()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<TableDto>>> GetTables(int pageNumber = 1, int pageSize = 10)
         {
-            var tables = await _tableRepository.GetAllAsync();
+            if (pageNumber < 1 || pageSize < 1)
+                return BadRequest($"'{nameof(pageNumber)}' and '{nameof(pageSize)}' must be greater than 0.");
 
-            if (tables == null || !tables.Any())
+            pageSize = Math.Min(pageSize, MaxPageSize);
+
+            var (tables, paginationMetadata) = await _tableRepository.GetAllAsync(
+                _ => true,
+                pageNumber,
+                pageSize
+            );
+
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+
+            if (!tables.Any())
                 return NoContent();
 
             return Ok(_mapper.Map<IEnumerable<TableDto>>(tables));
         }
+
 
         /// <summary>
         /// Retrieves a table by its ID.

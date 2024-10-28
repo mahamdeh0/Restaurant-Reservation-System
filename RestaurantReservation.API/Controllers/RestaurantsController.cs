@@ -2,10 +2,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using RestaurantReservation.API.Models.Reservations;
 using RestaurantReservation.API.Models.Restaurants;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
+using System.Text.Json;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -18,6 +18,9 @@ namespace RestaurantReservation.API.Controllers
 
         private readonly IMapper _mapper;
 
+        private const int MaxPageSize = 5;
+
+
         public RestaurantsController(IRestaurantRepository restaurantRepository, IMapper mapper)
         {
             _restaurantRepository = restaurantRepository;
@@ -26,20 +29,36 @@ namespace RestaurantReservation.API.Controllers
 
 
         /// <summary>
-        /// Gets all restaurants.
+        /// Gets all restaurants with pagination.
         /// </summary>
-        /// <returns>A list of RestaurantDto.</returns>
+        /// <param name="pageNumber">The number of the page to retrieve.</param>
+        /// <param name="pageSize">The number of items per page.</param>
+        /// <returns>An ActionResult containing a collection of Restaurant DTOs; returns a 200 OK response with the list of restaurants or a 204 No Content response if no restaurants are found.</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RestaurantDto>>> GetRestaurants()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<RestaurantDto>>> GetRestaurants(int pageNumber = 1, int pageSize = 10)
         {
+            if (pageNumber < 1 || pageSize < 1)
+                return BadRequest($"'{nameof(pageNumber)}' and '{nameof(pageSize)}' must be greater than 0.");
 
-            var restaurants = await _restaurantRepository.GetAllAsync();
+            pageSize = Math.Min(pageSize, MaxPageSize);
 
-            if (restaurants == null || !restaurants.Any())
-                return NotFound("No restaurants found.");
+            var (restaurants, paginationMetadata) = await _restaurantRepository.GetAllAsync(
+                _ => true, 
+                pageNumber,
+                pageSize
+            );
+
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+
+            if (!restaurants.Any())
+                return NoContent();
 
             return Ok(_mapper.Map<IEnumerable<RestaurantDto>>(restaurants));
         }
+
 
         /// <summary>
         /// Retrieves a restaurant by its ID.
@@ -52,7 +71,7 @@ namespace RestaurantReservation.API.Controllers
             var restaurant = await _restaurantRepository.GetByIdAsync(id);
 
             if (restaurant == null)
-                return NotFound(new { Message = $"Restaurant with ID {id} not found." }); 
+                return NotFound(new { Message = $"Restaurant with ID {id} not found." });
 
 
             return Ok(_mapper.Map<RestaurantDto>(restaurant));
@@ -66,14 +85,14 @@ namespace RestaurantReservation.API.Controllers
         [HttpPost]
         public async Task<ActionResult<RestaurantDto>> CreateRestaurant(RestaurantCreationDto restaurantCreationDto)
         {
-            if (restaurantCreationDto == null) 
+            if (restaurantCreationDto == null)
                 return BadRequest(new { Message = "Restaurant creation data is required." });
 
             var restaurantToAdd = _mapper.Map<Restaurant>(restaurantCreationDto);
 
             var addedRestaurant = await _restaurantRepository.CreateAsync(restaurantToAdd);
 
-            if (addedRestaurant == null) 
+            if (addedRestaurant == null)
                 return BadRequest(new { Message = "Failed to create the restaurant." });
 
             var restaurantDto = _mapper.Map<RestaurantDto>(addedRestaurant);
@@ -94,7 +113,7 @@ namespace RestaurantReservation.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRestaurant(int id, RestaurantUpdateDto restaurantUpdateDto)
         {
-            if (restaurantUpdateDto == null) 
+            if (restaurantUpdateDto == null)
                 return BadRequest(new { Message = "Restaurant update data is required." });
 
             var restaurant = await _restaurantRepository.GetByIdAsync(id);
@@ -118,7 +137,7 @@ namespace RestaurantReservation.API.Controllers
         [HttpPatch("{id}")]
         public async Task<IActionResult> PartiallyUpdateRestaurant(int id, JsonPatchDocument<RestaurantUpdateDto> patchDocument)
         {
-            if (patchDocument == null) 
+            if (patchDocument == null)
                 return BadRequest(new { Message = "Patch document is required." });
 
             var restaurant = await _restaurantRepository.GetByIdAsync(id);

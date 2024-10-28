@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.OrderItems;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
+using System.Text.Json;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -16,6 +17,8 @@ namespace RestaurantReservation.API.Controllers
         private readonly IOrderItemRepository _orderItemRepository;
         private readonly IOrderRepository _orderRepository;
         private readonly IMapper _mapper;
+        private const int MaxPageSize = 5;
+
 
         public OrderItemsController(IOrderItemRepository orderItemRepository, IOrderRepository orderRepository, IMapper mapper)
         {
@@ -25,22 +28,41 @@ namespace RestaurantReservation.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves all Order Items.
+        /// Retrieves all Order Items for a specific order with pagination.
         /// </summary>
+        /// <param name="orderId">The ID of the order to retrieve items for.</param>
+        /// <param name="pageNumber">The number of the page to retrieve.</param>
+        /// <param name="pageSize">The number of items per page.</param>
         /// <returns>A list of Order Item DTOs if available; otherwise, a 204 No Content response if no Order Items exist.</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<ActionResult<IEnumerable<OrderItemDto>>> GetOrderItems(int orderId)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<IEnumerable<OrderItemDto>>> GetOrderItems(int orderId, int pageNumber = 1, int pageSize = 10)
         {
             if (!await _orderRepository.OrderItemExistsAsync(orderId))
-            {
                 return NotFound("No order found with the specified ID.");
-            }
 
-            var orderItems = await _orderItemRepository.GetAllAsync();
+            if (pageNumber < 1 || pageSize < 1)
+                return BadRequest($"'{nameof(pageNumber)}' and '{nameof(pageSize)}' must be greater than 0.");
+
+            pageSize = Math.Min(pageSize, MaxPageSize);
+
+            var (orderItems, paginationMetadata) = await _orderItemRepository.GetAllAsync(
+                item => item.OrderId == orderId,
+                pageNumber,
+                pageSize
+            );
+
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+
+            if (!orderItems.Any())
+                return NoContent();
+
             return Ok(_mapper.Map<IEnumerable<OrderItemDto>>(orderItems));
         }
+
 
         /// <summary>
         /// Retrieves a specific order item by its ID for a given order ID.

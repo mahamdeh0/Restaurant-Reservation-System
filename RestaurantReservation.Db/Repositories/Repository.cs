@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Db.Interfaces;
+using RestaurantReservation.Db.Models;
+using System.Linq.Expressions;
 
 namespace RestaurantReservation.Db.Repositories
 {
@@ -42,9 +44,26 @@ namespace RestaurantReservation.Db.Repositories
             return await _dbSet.FindAsync(id);
         }
 
-        public async Task<IEnumerable<TEntity>> GetAllAsync()
+        public async Task<(IEnumerable<TEntity> Entities, PaginationMetadata PaginationMetadata)> GetAllAsync(
+        Expression<Func<TEntity, bool>> filter, int pageNumber, int pageSize)
         {
-            return await _dbSet.ToListAsync();
+            var totalEntities = await _dbSet.CountAsync(); 
+            var entities = await _dbSet
+                .Where(filter)
+                .Skip((pageNumber - 1) * pageSize) 
+                .Take(pageSize)
+                .ToListAsync();
+
+            var paginationMetadata = new PaginationMetadata
+            {
+                TotalCount = totalEntities,
+                PageSize = pageSize,
+                CurrentPage = pageNumber,
+                TotalPages = (int)Math.Ceiling((double)totalEntities / pageSize)
+            };
+
+            return (entities, paginationMetadata);
         }
+
     }
 }

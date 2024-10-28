@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Employees;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
+using System.Text.Json;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -17,6 +18,7 @@ namespace RestaurantReservation.API.Controllers
         private readonly IRestaurantRepository _restaurantRepository;
         private readonly IOrderRepository _orderRepository;
         private readonly IMapper _mapper;
+        private const int MaxPageSize = 5;
 
         public EmployeesController(IEmployeeRepository employeeRepository, IRestaurantRepository restaurantRepository, IOrderRepository orderRepository, IMapper mapper)
         {
@@ -27,23 +29,33 @@ namespace RestaurantReservation.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves all employees.
+        /// Retrieves all employees with pagination.
         /// </summary>
+        /// <param name="pageNumber">The number of the page to retrieve.</param>
+        /// <param name="pageSize">The number of items per page.</param>
         /// <returns>A list of employee DTOs.</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetEmployees()
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetEmployees(int pageNumber = 1, int pageSize = 10)
         {
-            var allEmployees = await _employeeRepository.GetAllAsync();
+            if (pageNumber < 1 || pageSize < 1)
+                return BadRequest($"'{nameof(pageNumber)}' and '{nameof(pageSize)}' must be greater than 0.");
 
-            if (allEmployees == null || !allEmployees.Any())
-            {
-                return NoContent();
-            }
+            pageSize = Math.Min(pageSize, MaxPageSize);
 
-            return Ok(_mapper.Map<IEnumerable<EmployeeDto>>(allEmployees));
+            var (employees, paginationMetadata) = await _employeeRepository.GetAllAsync(
+                _ => true, 
+                pageNumber,
+                pageSize
+            );
+
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+
+            return Ok(_mapper.Map<IEnumerable<EmployeeDto>>(employees));
         }
+
 
         /// <summary>
         /// Retrieves an employee by their ID.

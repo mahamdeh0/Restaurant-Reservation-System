@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Customers;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
+using System.Text.Json;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -15,6 +16,7 @@ namespace RestaurantReservation.API.Controllers
     {
         private readonly ICustomerRepository _customerRepository;
         private readonly IMapper _mapper;
+        private const int MaxPageSize = 5;
 
         public CustomersController(ICustomerRepository customerRepository, IMapper Mapper)
         {
@@ -23,20 +25,25 @@ namespace RestaurantReservation.API.Controllers
         }
 
         /// <summary>
-        /// Gets all customers.
+        /// Gets all customers with pagination.
         /// </summary>
+        /// <param name="pageNumber">The number of the page to retrieve.</param>
+        /// <param name="pageSize">The number of items per page.</param>
         /// <returns>A list of customer DTOs.</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<ActionResult<IEnumerable<CustomerDto>>> GetAllCustomers()
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<CustomerDto>>> GetAllCustomers(int pageNumber = 1, int pageSize = 10)
         {
-            var customers = await _customerRepository.GetAllAsync();
+            if (pageNumber < 1 || pageSize < 1)
+                return BadRequest($"'{nameof(pageNumber)}' and '{nameof(pageSize)}' must be greater than 0.");
 
-            if (customers == null || !customers.Any())
-            {
-                return NoContent();
-            }
+            pageSize = Math.Min(pageSize, MaxPageSize);
+
+            var (customers, paginationMetadata) = await _customerRepository.GetAllAsync(_ => true, pageNumber, pageSize);
+
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
 
             return Ok(_mapper.Map<IEnumerable<CustomerDto>>(customers));
         }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.MenuItems;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
+using System.Text.Json;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -16,6 +17,7 @@ namespace RestaurantReservation.API.Controllers
         private readonly IMenuItemRepository _menuItemRepository;
         private readonly IRestaurantRepository _restaurantRepository;
         private readonly IMapper _mapper;
+        private const int MaxPageSize = 5;
 
         public MenuItemsController(IMenuItemRepository menuItemRepository, IRestaurantRepository restaurantRepository, IMapper mapper)
         {
@@ -27,23 +29,36 @@ namespace RestaurantReservation.API.Controllers
 
 
         /// <summary>
-        /// Retrieves all menu items.
+        /// Retrieves all menu items with pagination.
         /// </summary>
+        /// <param name="pageNumber">The number of the page to retrieve.</param>
+        /// <param name="pageSize">The number of items per page.</param>
         /// <returns>A list of menu item DTOs if available; otherwise, a 204 No Content response if no menu items exist.</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<ActionResult<IEnumerable<MenuItemDto>>> GetMenuItems()
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<MenuItemDto>>> GetMenuItems(int pageNumber = 1, int pageSize = 10)
         {
-            var menuItems = await _menuItemRepository.GetAllAsync();
+            if (pageNumber < 1 || pageSize < 1)
+                return BadRequest($"'{nameof(pageNumber)}' and '{nameof(pageSize)}' must be greater than 0.");
+
+            pageSize = Math.Min(pageSize, MaxPageSize);
+
+            var (menuItems, paginationMetadata) = await _menuItemRepository.GetAllAsync(
+                _ => true, 
+                pageNumber,
+                pageSize
+            );
+
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
 
             if (!menuItems.Any())
-            {
                 return NoContent();
-            }
 
             return Ok(_mapper.Map<IEnumerable<MenuItemDto>>(menuItems));
         }
+
 
         /// <summary>
         /// Creates a new menu item.

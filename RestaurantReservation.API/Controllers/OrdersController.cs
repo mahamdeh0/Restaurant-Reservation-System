@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.API.Models.Orders;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
-using RestaurantReservation.Db.Repositories;
+using System.Text.Json;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -16,6 +16,7 @@ namespace RestaurantReservation.API.Controllers
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IMapper _mapper;
+        private const int MaxPageSize = 5;
 
         public OrdersController(IOrderRepository orderRepository, IMapper mapper)
         {
@@ -24,19 +25,37 @@ namespace RestaurantReservation.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves a list of all orders.
+        /// Retrieves a list of all orders with pagination.
         /// </summary>
+        /// <param name="pageNumber">The number of the page to retrieve.</param>
+        /// <param name="pageSize">The number of items per page.</param>
         /// <returns>An ActionResult containing a collection of order DTOs; returns a 200 OK response with the list of orders or a 204 No Content response if no orders are found.</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders(int pageNumber = 1, int pageSize = 10)
         {
-            var orders = await _orderRepository.GetAllAsync();
+            if (pageNumber < 1 || pageSize < 1)
+                return BadRequest($"'{nameof(pageNumber)}' and '{nameof(pageSize)}' must be greater than 0.");
 
-            if (orders == null || !orders.Any())
-                return NoContent(); 
 
-            return Ok(_mapper.Map<IEnumerable<OrderDto>>(orders)); 
+            pageSize = Math.Min(pageSize, MaxPageSize);
+
+            var (orders, paginationMetadata) = await _orderRepository.GetAllAsync(
+                _ => true, 
+                pageNumber,
+                pageSize
+            );
+
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+
+            if (!orders.Any())
+                return NoContent();
+
+            return Ok(_mapper.Map<IEnumerable<OrderDto>>(orders));
         }
+
 
         /// <summary>
         /// Retrieves an order by its ID.
@@ -126,7 +145,7 @@ namespace RestaurantReservation.API.Controllers
 
             patchDocument.ApplyTo(orderToPatch, ModelState);
 
-            if (!ModelState.IsValid ||!TryValidateModel(orderToPatch))
+            if (!ModelState.IsValid || !TryValidateModel(orderToPatch))
             {
                 return BadRequest(ModelState);
             }

@@ -7,7 +7,7 @@ using RestaurantReservation.API.Models.Orders;
 using RestaurantReservation.API.Models.Reservations;
 using RestaurantReservation.Db.Interfaces;
 using RestaurantReservation.Db.Models.Entities;
-using RestaurantReservation.Db.Repositories;
+using System.Text.Json;
 
 namespace RestaurantReservation.API.Controllers
 {
@@ -23,6 +23,7 @@ namespace RestaurantReservation.API.Controllers
         private readonly IMenuItemRepository _menuItemRepository;
         private readonly IOrderRepository _orderRepository;
         private readonly IMapper _mapper;
+        private const int MaxPageSize = 5;
 
         public ReservationsController(IReservationRepository reservationRepository, IRestaurantRepository restaurantRepository, ICustomerRepository customerRepository, IMenuItemRepository menuItemRepository, IOrderRepository orderRepository, IMapper mapper)
         {
@@ -35,21 +36,36 @@ namespace RestaurantReservation.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves a list of all reservations.
+        /// Retrieves a list of all reservations with pagination.
         /// </summary>
+        /// <param name="pageNumber">The number of the page to retrieve.</param>
+        /// <param name="pageSize">The number of items per page.</param>
         /// <returns>An ActionResult containing a collection of reservation DTOs; returns a 200 OK response with the list of reservations or a 204 No Content response if no reservations are found.</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<ActionResult<IEnumerable<ReservationDto>>> GetReservations()
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<ReservationDto>>> GetReservations(int pageNumber = 1, int pageSize = 10)
         {
-            var reservations = await _reservationRepository.GetAllAsync();
+            if (pageNumber < 1 || pageSize < 1)
+                return BadRequest($"'{nameof(pageNumber)}' and '{nameof(pageSize)}' must be greater than 0.");
 
-            if (reservations == null || !reservations.Any())
+            pageSize = Math.Min(pageSize, MaxPageSize);
+
+            var (reservations, paginationMetadata) = await _reservationRepository.GetAllAsync(
+                _ => true, 
+                pageNumber,
+                pageSize
+            );
+
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+
+            if (!reservations.Any())
                 return NoContent();
 
             return Ok(_mapper.Map<IEnumerable<ReservationDto>>(reservations));
         }
+
 
         /// <summary>
         /// Retrieves a reservation by its ID.
