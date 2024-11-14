@@ -58,7 +58,7 @@ namespace RestaurantReservation.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<CustomerDto>> GetCustomer(int id)
         {
-            var customer = await _customerRepository.GetByIdAsync(id);
+            Customer? customer = await _customerRepository.GetByIdAsync(id); 
             if (customer == null)
                 return NotFound();
 
