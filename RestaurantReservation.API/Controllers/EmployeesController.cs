@@ -96,16 +96,14 @@ namespace RestaurantReservation.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAverageOrderAmount(int employeeId)
         {
-            try
-            {
-                var averageOrderAmount = await _orderRepository.CalculateAverageOrderAmountAsync(employeeId);
+            var averageOrderAmount = await _orderRepository.CalculateAverageOrderAmountAsync(employeeId);
 
-                return Ok(new { averageOrderAmount });
-            }
-            catch (Exception ex)
+            if (averageOrderAmount == null)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while processing your request.", Details = ex.Message });
+                return NotFound(new { Message = "No orders found for the specified employee." });
             }
+
+            return Ok(new { averageOrderAmount });
         }
 
         /// <summary>
