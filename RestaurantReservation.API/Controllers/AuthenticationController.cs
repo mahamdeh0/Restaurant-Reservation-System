@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RestaurantReservation.API.Interfaces;
 using RestaurantReservation.API.Services;
 
 namespace RestaurantReservation.API.Controllers
@@ -7,9 +8,9 @@ namespace RestaurantReservation.API.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private readonly JwtTokenGenerator _jwtTokenGenerator;
+        private readonly IJwtTokenGenerator _jwtTokenGenerator;
 
-        public AuthenticationController(JwtTokenGenerator jwtTokenGenerator)
+        public AuthenticationController(IJwtTokenGenerator jwtTokenGenerator)
         {
             _jwtTokenGenerator = jwtTokenGenerator;
         }

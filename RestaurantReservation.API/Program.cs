@@ -9,6 +9,7 @@ using RestaurantReservation.API.Services;
 using FluentValidation.AspNetCore;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
+using RestaurantReservation.API.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +40,7 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>()
     .AddScoped<IOrderRepository, OrderRepository>()
     .AddScoped<IReservationRepository, ReservationRepository>()
     .AddScoped<ITableRepository, TableRepository>()
-    .AddScoped<JwtTokenGenerator>();
+    .AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
 builder.Services.AddAuthentication("Bearer").AddJwtBearer(options =>
 {
