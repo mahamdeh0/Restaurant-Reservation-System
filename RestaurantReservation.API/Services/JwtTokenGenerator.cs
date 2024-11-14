@@ -8,7 +8,6 @@ namespace RestaurantReservation.API.Services
 {
     public class JwtTokenGenerator : IJwtTokenGenerator
     {
-
         private readonly IConfiguration _configuration;
 
         public JwtTokenGenerator(IConfiguration configuration)
@@ -20,23 +19,20 @@ namespace RestaurantReservation.API.Services
         {
             var claims = new[]
             {
-               new Claim(ClaimTypes.Name, UserName),
-               new Claim("Password", Password)
+                new Claim(ClaimTypes.Name, UserName)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddMinutes(50),
-            signingCredentials: creds);
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(50),
+                signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-
         }
-
     }
 }
