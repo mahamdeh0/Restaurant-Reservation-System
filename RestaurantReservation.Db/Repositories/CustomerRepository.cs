@@ -17,5 +17,10 @@ namespace RestaurantReservation.Db.Repositories
         {
             return await _context.Customers.FromSql($"EXEC sp_FindCustomersWithPartySizeLargerThan {PartySize}").ToListAsync();
         }
+
+        public async Task<bool> CustomerExistsAsync(int customerId)
+        {
+            return await _context.Customers.AnyAsync(c => c.CustomerId == customerId);
+        }
     }
 }

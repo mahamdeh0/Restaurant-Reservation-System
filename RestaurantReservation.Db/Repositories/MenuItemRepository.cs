@@ -24,5 +24,9 @@ namespace RestaurantReservation.Db.Repositories
              .ToListAsync();
 
         }
+        public async Task<bool> MenuItemExistsAsync(int itemId)
+        {
+            return await _context.MenuItems.AnyAsync(m => m.ItemId == itemId);
+        }
     }
 }

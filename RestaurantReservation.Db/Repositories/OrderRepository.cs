@@ -29,5 +29,10 @@ namespace RestaurantReservation.Db.Repositories
             .Where(o => o.ReservationId == reservationId)
             .ToListAsync();
         }
+        public async Task<bool> OrderItemExistsAsync(int orderId)
+        {
+            return await _context.OrderItems.AnyAsync(o => o.OrderId == orderId);
+        }
+
     }
 }

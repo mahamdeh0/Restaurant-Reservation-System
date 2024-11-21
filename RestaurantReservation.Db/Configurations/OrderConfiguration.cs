@@ -22,7 +22,7 @@ namespace RestaurantReservation.Db.Configurations
             builder.HasOne(r => r.Reservation)
               .WithMany(o => o.Orders)
               .HasForeignKey(r => r.ReservationId)
-              .OnDelete(DeleteBehavior.ClientSetNull);
+              .OnDelete(DeleteBehavior.Cascade);
 
         }
     }
